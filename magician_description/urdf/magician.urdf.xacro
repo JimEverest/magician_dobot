@@ -3,7 +3,14 @@
      Commit Version: 1.5.0-0-g9aa0fdb  Build Version: 1.5.7004.21443
      For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
 <robot
-  name="magician">
+  name="magician" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  
+  <xacro:include filename="$(find magician_description)/urdf/materials.xacro" />
+  
+  <xacro:include filename="$(find magician_description)/urdf/magician.gazebo" />
+  
+  <xacro:include filename="$(find magician_description)/urdf/magician_transmission.xacro" />
+  
   <link name="world"/>
   <link name="magician_origin"/>
   <joint
@@ -18,8 +25,6 @@
       link="magician_origin" />
     <axis
       xyz="0 0 0" />
-    <safety_controller
-      k_velocity="0" />
   </joint>
   <link
     name="magician_base">
@@ -73,8 +78,6 @@
       link="magician_base" />
     <axis
       xyz="0 0 0" />
-    <safety_controller
-      k_velocity="0" />
   </joint>
   <link
     name="magician_link1">
@@ -131,10 +134,8 @@
     <limit
       lower="-2.1816"
       upper="2.1816"
-      effort="0"
-      velocity="0" />
-    <safety_controller
-      k_velocity="0" />
+      effort="20"
+      velocity="1.57" />
   </joint>
   <link
     name="magician_link2">
@@ -161,7 +162,7 @@
           filename="package://magician_description/meshes/magician_link2.STL" />
       </geometry>
       <material
-        name="">
+        name="metal_grey">
         <color
           rgba="1 1 1 1" />
       </material>
@@ -191,10 +192,8 @@
     <limit
       lower="-0.0872"
       upper="1.5707"
-      effort="0"
-      velocity="0" />
-    <safety_controller
-      k_velocity="0" />
+      effort="20"
+      velocity="1.57" />
   </joint>
   <link
     name="magician_link3">
@@ -221,7 +220,7 @@
           filename="package://magician_description/meshes/magician_link3.STL" />
       </geometry>
       <material
-        name="">
+        name="metal_grey">
         <color
           rgba="1 1 1 1" />
       </material>
@@ -251,10 +250,8 @@
     <limit
       lower="-1.5707"
       upper="0.08726"
-      effort="0"
-      velocity="0" />
-    <safety_controller
-      k_velocity="0" />
+      effort="20"
+      velocity="1.57" />
     <mimic
       joint="magician_joint2"
       multiplier="-1"
@@ -266,14 +263,14 @@
         xyz="0 0 0"
         rpy="0 0 0" />
       <mass
-        value="0.001" />
+        value="0.025" />
       <inertia
-        ixx="1.667E-10"
-        ixy="1.667E-10"
-        ixz="1.667E-10"
-        iyy="1.667E-10"
-        iyz="1.667E-10"
-        izz="1.667E-10" />
+        ixx="1E-5"
+        ixy="0"
+        ixz="0"
+        iyy="1E-5"
+        iyz="0"
+        izz="1E-5" />
     </inertial>
   </link>
   <joint
@@ -291,10 +288,8 @@
     <limit
       lower="-0.2617"
       upper="1.5707"
-      effort="0"
-      velocity="0" />
-    <safety_controller
-      k_velocity="0" />
+      effort="20"
+      velocity="1.57" />
   </joint>
   <link
     name="magician_link4">
@@ -321,7 +316,7 @@
           filename="package://magician_description/meshes/magician_link4.STL" />
       </geometry>
       <material
-        name="">
+        name="metal_grey">
         <color
           rgba="1 1 1 1" />
       </material>
@@ -351,10 +346,8 @@
     <limit
       lower="-1.5707"
       upper="0.2617"
-      effort="0"
-      velocity="0" />
-    <safety_controller
-      k_velocity="0" />
+      effort="20"
+      velocity="1.57" />
     <mimic
       joint="magician_joint3"
       multiplier="-1"
@@ -412,8 +405,6 @@
       link="magician_link3_surface" />
     <axis
       xyz="0 0 0" />
-    <safety_controller
-      k_velocity="0" />
   </joint>
   <link
     name="magician_link2_surface">
@@ -467,8 +458,6 @@
       link="magician_link2_surface" />
     <axis
       xyz="0 0 0" />
-    <safety_controller
-      k_velocity="0" />
   </joint>
   <link
     name="magician_servos">
@@ -495,7 +484,7 @@
           filename="package://magician_description/meshes/magician_servos.STL" />
       </geometry>
       <material
-        name="">
+        name="metal_grey">
         <color
           rgba="1 1 1 1" />
       </material>
@@ -522,8 +511,6 @@
       link="magician_servos" />
     <axis
       xyz="0 0 0" />
-    <safety_controller
-      k_velocity="0" />
   </joint>
   <link
     name="magician_base_surface">
@@ -550,7 +537,7 @@
           filename="package://magician_description/meshes/magician_base_surface.STL" />
       </geometry>
       <material
-        name="">
+        name="metal_grey">
         <color
           rgba="1 1 1 1" />
       </material>
@@ -577,7 +564,5 @@
       link="magician_base_surface" />
     <axis
       xyz="0 0 0" />
-    <safety_controller
-      k_velocity="0" />
   </joint>
 </robot>
