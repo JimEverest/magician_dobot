@@ -10,6 +10,7 @@
     <!--CHAINS: When a chain is specified, all the links along the chain (including endpoints) are included in the group. Additionally, all the joints that are parents to included links are also included. This means that joints along the chain and the parent joint of the base link are included in the group-->
     <!--SUBGROUPS: Groups can also be formed by referencing to already defined group names-->
     <group name="magician_arm">
+        <link name="magician_end_link" />
         <joint name="magician_joint1" />
         <joint name="magician_joint2" />
         <joint name="magician_fake_joint1" />
@@ -28,7 +29,7 @@
         <joint name="magician_joint3" value="0" />
     </group_state>
     <!--END EFFECTOR: Purpose: Represent information about an end effector.-->
-    <end_effector name="magician_eff" parent_link="magician_link4" group="magician_eff_group" />
+    <end_effector name="magician_eff" parent_link="magician_end_link" group="magician_eff_group" />
     <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
     <disable_collisions link1="magician_base" link2="magician_base_surface" reason="Adjacent" />
     <disable_collisions link1="magician_base" link2="magician_link1" reason="Adjacent" />

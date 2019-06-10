@@ -4,9 +4,7 @@
      For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
 <robot
   name="magician" xmlns:xacro="http://www.ros.org/wiki/xacro">
-  
-  <xacro:include filename="$(find magician_description)/urdf/materials.xacro" />
-  
+    
   <xacro:include filename="$(find magician_description)/urdf/magician.gazebo" />
   
   <xacro:include filename="$(find magician_description)/urdf/magician_transmission.xacro" />
@@ -162,9 +160,9 @@
           filename="package://magician_description/meshes/magician_link2.STL" />
       </geometry>
       <material
-        name="metal_grey">
+        name="">
         <color
-          rgba="1 1 1 1" />
+          rgba="0.501960784313725 0.501960784313725 0.501960784313725 1" />
       </material>
     </visual>
     <collision>
@@ -220,9 +218,9 @@
           filename="package://magician_description/meshes/magician_link3.STL" />
       </geometry>
       <material
-        name="metal_grey">
+        name="">
         <color
-          rgba="1 1 1 1" />
+          rgba="0.501960784313725 0.501960784313725 0.501960784313725 1" />
       </material>
     </visual>
     <collision>
@@ -316,9 +314,9 @@
           filename="package://magician_description/meshes/magician_link4.STL" />
       </geometry>
       <material
-        name="metal_grey">
+        name="">
         <color
-          rgba="1 1 1 1" />
+          rgba="0.501960784313725 0.501960784313725 0.501960784313725 1" />
       </material>
     </visual>
     <collision>
@@ -380,7 +378,7 @@
       <material
         name="">
         <color
-          rgba="1 1 1 1" />
+          rgba="0.501960784313725 0.501960784313725 0.501960784313725 1" />
       </material>
     </visual>
     <collision>
@@ -433,7 +431,7 @@
       <material
         name="">
         <color
-          rgba="1 1 1 1" />
+          rgba="0.501960784313725 0.501960784313725 0.501960784313725 1" />
       </material>
     </visual>
     <collision>
@@ -484,9 +482,9 @@
           filename="package://magician_description/meshes/magician_servos.STL" />
       </geometry>
       <material
-        name="metal_grey">
+        name="">
         <color
-          rgba="1 1 1 1" />
+          rgba="0.501960784313725 0.501960784313725 0.501960784313725 1" />
       </material>
     </visual>
     <collision>
@@ -537,9 +535,9 @@
           filename="package://magician_description/meshes/magician_base_surface.STL" />
       </geometry>
       <material
-        name="metal_grey">
+        name="">
         <color
-          rgba="1 1 1 1" />
+          rgba="0.501960784313725 0.501960784313725 0.501960784313725 1" />
       </material>
     </visual>
     <collision>
@@ -565,15 +563,29 @@
     <axis
       xyz="0 0 0" />
   </joint>
-  <link name="magician_end_effctor"/>
+  <link name="magician_end_link"/>
   <joint
     name="magician_link4_joint1"
     type="fixed">
     <origin
-      xyz="-0.05 0 0"
+      xyz="0 0 0"
       rpy="-1.5707963267948966 3.1415926535897932 0" />
     <parent
       link="magician_link4" />
+    <child
+      link="magician_end_link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link name="magician_end_effctor"/>
+  <joint
+    name="magician_end_link_joint1"
+    type="fixed">
+    <origin
+      xyz="0.05 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="magician_end_link" />
     <child
       link="magician_end_effctor" />
     <axis
