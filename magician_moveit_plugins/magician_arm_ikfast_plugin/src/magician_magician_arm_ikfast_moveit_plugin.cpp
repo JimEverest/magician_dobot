@@ -177,7 +177,7 @@ public:
   /** @class
    *  @brief Interface for an IKFast kinematics plugin
    */
-  IKFastKinematicsPlugin() : num_joints_(GetNumJoints()), fake_num_joints_(5), active_(false)
+  IKFastKinematicsPlugin() : num_joints_(GetNumJoints()), fake_num_joints_(6), active_(false)
   {
     srand(time(NULL));
     supported_methods_.push_back(kinematics::DiscretizationMethods::NO_DISCRETIZATION);
@@ -437,10 +437,12 @@ bool IKFastKinematicsPlugin::initialize(const std::string& robot_description, co
     link = link->getParent();
   }
 
+  /*
   for(size_t i=0; i<joint_names_.size(); i++)
   {
     std::cout<<"joint"<<i<<joint_names_[i]<<std::endl;
   }
+  */
 
   if (joint_names_.size() != fake_num_joints_)
   {
@@ -828,6 +830,8 @@ bool IKFastKinematicsPlugin::getPositionFK(const std::vector<std::string>& link_
   for (int i = 0; i < 9; ++i)
     p_out.M.data[i] = eerot[i];
 
+  p_out.M=KDL::Rotation::Quaternion(0, 0, -1*sin(M_PI_4), cos(M_PI_4));
+
   poses.resize(1);
   tf::poseKDLToMsg(p_out, poses[0]);
 
@@ -1072,12 +1076,13 @@ bool IKFastKinematicsPlugin::searchPositionIK(const geometry_msgs::Pose& ik_pose
               if (costs < best_costs || best_costs == -1.0)
               {
                 best_costs = costs;
-                best_solution.resize(5);
+                best_solution.resize(fake_num_joints_);
                 best_solution[0]=solution[0];
                 best_solution[1]=solution[1];
                 best_solution[2]=-1*solution[1];
                 best_solution[3]=solution[2];
                 best_solution[4]=-1*solution[2];
+                best_solution[5]=-1*solution[0];
               }
             }
             else
@@ -1221,12 +1226,13 @@ bool IKFastKinematicsPlugin::getPositionIK(const geometry_msgs::Pose& ik_pose, c
   {
     std::sort(solutions_obey_limits.begin(), solutions_obey_limits.end());
     solution.clear();
-    solution.resize(5);
+    solution.resize(fake_num_joints_);
     solution[0] = solutions_obey_limits[0].value[0];
     solution[1] = solutions_obey_limits[0].value[1];
     solution[2] = -1*solutions_obey_limits[0].value[1];
     solution[3] = solutions_obey_limits[0].value[2];
     solution[4] = -1*solutions_obey_limits[0].value[2];
+    solution[5] = -1*solutions_obey_limits[0].value[0];
     error_code.val = moveit_msgs::MoveItErrorCodes::SUCCESS;
     return true;
   }
@@ -1366,12 +1372,13 @@ bool IKFastKinematicsPlugin::getPositionIK(const std::vector<geometry_msgs::Pose
           // All elements of solution obey limits
           solutions_found = true;
           std::vector<double> fake_sol;
-          fake_sol.resize(5);
+          fake_sol.resize(fake_num_joints_);
           fake_sol[0]=sol[0];
           fake_sol[1]=sol[1];
           fake_sol[2]=-1*sol[1];
           fake_sol[3]=sol[2];
           fake_sol[4]=-1*sol[2];
+          fake_sol[5]=-1*sol[0];
           solutions.push_back(fake_sol);
         }
       }

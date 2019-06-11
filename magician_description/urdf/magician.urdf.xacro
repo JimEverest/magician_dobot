@@ -9,6 +9,13 @@
   
   <xacro:include filename="$(find magician_description)/urdf/magician_transmission.xacro" />
   
+  <xacro:property name="joint1_lower" value="-2.1816"/>
+  <xacro:property name="joint1_upper" value="2.1816"/>
+  <xacro:property name="joint2_lower" value="-0.087"/>
+  <xacro:property name="joint2_upper" value="0.872"/>
+  <xacro:property name="joint3_lower" value="-0.087"/>
+  <xacro:property name="joint3_upper" value="1.134"/>
+  
   <link name="world"/>
   <link name="magician_origin"/>
   <joint
@@ -130,8 +137,8 @@
     <axis
       xyz="0 0 1" />
     <limit
-      lower="-2.1816"
-      upper="2.1816"
+      lower="${joint1_lower}"
+      upper="${joint1_upper}"
       effort="20"
       velocity="1.57" />
   </joint>
@@ -188,8 +195,8 @@
     <axis
       xyz="0 0 1" />
     <limit
-      lower="-0.0872"
-      upper="1.5707"
+      lower="${joint2_lower}"
+      upper="${joint2_upper}"
       effort="20"
       velocity="1.57" />
   </joint>
@@ -246,8 +253,8 @@
     <axis
       xyz="0 0 -1" />
     <limit
-      lower="-1.5707"
-      upper="0.08726"
+      lower="${-1*joint2_upper}"
+      upper="${-1*joint2_lower}"
       effort="20"
       velocity="1.57" />
     <mimic
@@ -284,8 +291,8 @@
     <axis
       xyz="0 0 -1" />
     <limit
-      lower="-0.2617"
-      upper="1.5707"
+      lower="${joint3_lower}"
+      upper="${joint3_upper}"
       effort="20"
       velocity="1.57" />
   </joint>
@@ -342,8 +349,8 @@
     <axis
       xyz="0 0 1" />
     <limit
-      lower="-1.5707"
-      upper="0.2617"
+      lower="${-1*joint3_upper}"
+      upper="${-1*joint3_lower}"
       effort="20"
       velocity="1.57" />
     <mimic
@@ -563,15 +570,38 @@
     <axis
       xyz="0 0 0" />
   </joint>
+  <link name="magician_end_turnplate"/>
+  <joint
+    name="magician_fake_joint3"
+    type="revolute">
+    <origin
+      xyz="0 0 0"
+      rpy="-1.5707963267948966 3.1415926535897932 0" />
+    <parent
+      link="magician_link4" />
+    <child
+      link="magician_end_turnplate" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="${-1*joint1_upper}"
+      upper="${-1*joint1_lower}"
+      effort="20"
+      velocity="1.57" />
+    <mimic
+      joint="magician_joint1"
+      multiplier="-1"
+      offset="0"/>
+  </joint>  
   <link name="magician_end_link"/>
   <joint
     name="magician_link4_joint1"
     type="fixed">
     <origin
       xyz="0 0 0"
-      rpy="-1.5707963267948966 3.1415926535897932 0" />
+      rpy="0 0 0" />
     <parent
-      link="magician_link4" />
+      link="magician_end_turnplate" />
     <child
       link="magician_end_link" />
     <axis

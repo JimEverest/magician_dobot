@@ -16,6 +16,7 @@
         <joint name="magician_fake_joint1" />
         <joint name="magician_joint3" />
         <joint name="magician_fake_joint2" />
+        <joint name="magician_fake_joint3" />
     </group>
     <group name="magician_eff_group">
         <link name="magician_end_effctor" />
