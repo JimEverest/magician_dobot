@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-  <arg name="paused" default="false"/>
+  <arg name="paused" default="true"/>
   <arg name="gazebo_gui" default="true"/>
   <arg name="urdf_path" default="$(find magician_description)/urdf/magician.urdf.xacro"/>
 
@@ -12,12 +12,24 @@
   </include>
 
   <!-- send robot urdf to param server -->
-  <param name="robot_description" textfile="$(arg urdf_path)" />
+  <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find magician_description)/urdf/magician.urdf.xacro'" />
 
   <!-- push robot_description to factory and spawn robot in gazebo at the origin, change x,y,z arguments to spawn in a different position -->
-  <node name="spawn_gazebo_model" pkg="gazebo_ros" type="spawn_model" args="-urdf -param robot_description -model robot -x 0 -y 0 -z 0"
-    respawn="false" output="screen" />
+  <node name="spawn_model" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen" 
+    args="-urdf -model magician 
+          -param robot_description 
+          -x 0
+          -y 0
+          -z 0.14
+          -J magician_joint1 0
+          -J magician_joint2 0 
+          -J magician_joint3 0
+          -unpause"/>
 
-  <include file="$(find magician_moveit_config)/launch/ros_controllers.launch"/>
+  <rosparam file="$(find magician_description)/config/joint_state_controller.yaml" command="load"/>
+  <node name="joint_state_controller_spawner" pkg="controller_manager" type="controller_manager" args="spawn joint_state_controller" respawn="false" output="screen"/>
+  
+  <rosparam file="$(find magician_description)/config/magician_arm_controller.yaml" command="load"/>
+  <node name="elfin_arm_controller_spawner" pkg="controller_manager" type="controller_manager" args="spawn magician_arm_controller" respawn="false" output="screen"/>
 
 </launch>
