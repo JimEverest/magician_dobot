@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   pluginlib
   roscpp
   tf_conversions
+  magician_kinematics
 )
 
 include_directories(${catkin_INCLUDE_DIRS})
@@ -19,6 +20,7 @@ catkin_package(
     pluginlib
     roscpp
     tf_conversions
+    magician_kinematics
 )
 
 include_directories(include)

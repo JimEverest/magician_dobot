@@ -358,6 +358,18 @@
       multiplier="-1"
       offset="0"/>
   </joint>
+  <link name="magician_arm_end"/>
+  <joint
+    name="magician_link4_joint1"
+    type="fixed">
+    <origin
+      xyz="0 0 0"
+      rpy="-1.5707963267948966 3.1415926535897932 0" />
+    <parent
+      link="magician_link4" />
+    <child
+      link="magician_arm_end" />
+  </joint>
   <link
     name="magician_link3_surface">
     <inertial>
@@ -576,9 +588,9 @@
     type="revolute">
     <origin
       xyz="0 0 0"
-      rpy="-1.5707963267948966 3.1415926535897932 0" />
+      rpy="0 0 0" />
     <parent
-      link="magician_link4" />
+      link="magician_arm_end" />
     <child
       link="magician_end_turnplate" />
     <axis
@@ -595,7 +607,7 @@
   </joint>  
   <link name="magician_end_link"/>
   <joint
-    name="magician_link4_joint1"
+    name="magician_end_turnplate_joint1"
     type="fixed">
     <origin
       xyz="0 0 0"
@@ -612,7 +624,7 @@
     name="magician_end_link_joint1"
     type="fixed">
     <origin
-      xyz="0.05 0 0"
+      xyz="0 0 0"
       rpy="0 0 0" />
     <parent
       link="magician_end_link" />
