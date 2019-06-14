@@ -62,6 +62,8 @@ TeleopBackground::TeleopBackground(moveit::planning_interface::MoveGroupInterfac
     resolution_angle_=0.02;
     resolution_linear_=0.005;
 
+    joint_speed_=joint_speed_default_*0.4;
+
     // active joints
     size_t active_joints[4]={0, 1, 3, 5};
     active_joints_=std::vector<size_t>(active_joints, active_joints+4);
@@ -88,10 +90,103 @@ bool TeleopBackground::jointTeleop_cb(magician_msgs::SetInt16::Request &req, mag
     double joint_current_position=position_current[joint_num];
     std::string direction=goal_.trajectory.joint_names[active_joint_num];
 
-    for(size_t i=0; i<position_current.size(); i++)
+    double sign;
+    if(abs(req.data)==req.data)
     {
-        std::cout<<"joint"<<i<<": "<<position_current[i]<<std::endl;
+        position_goal[joint_num]=group_->getRobotModel()->getURDF()->getJoint(goal_.trajectory.joint_names[active_joint_num])->limits->upper;
+        direction.append("+");
+        sign=1;
     }
+    else
+    {
+        position_goal[joint_num]=group_->getRobotModel()->getURDF()->getJoint(goal_.trajectory.joint_names[active_joint_num])->limits->lower;
+        direction.append("-");
+        sign=-1;
+    }
+
+    double duration_from_speed=fabs(position_goal[joint_num]-joint_current_position)/joint_speed_;
+    if(duration_from_speed<=0.1)
+    {
+        resp.success=false;
+        std::string result="robot can't move in ";
+        result.append(direction);
+        result.append(" direction any more");
+        resp.message=result;
+        return true;
+    }
+
+    trajectory_msgs::JointTrajectoryPoint point_tmp;
+
+    robot_state::RobotStatePtr kinematic_state_ptr=group_->getCurrentState();
+    robot_state::RobotState kinematic_state=*kinematic_state_ptr;
+    const robot_state::JointModelGroup* joint_model_group = kinematic_state.getJointModelGroup(group_->getName());
+
+    planning_scene_monitor_->updateFrameTransforms();
+    planning_scene::PlanningSceneConstPtr plan_scene=planning_scene_monitor_->getPlanningScene();
+
+    std::vector<double> position_tmp=position_current;
+    bool collision_flag=false;
+
+    int loop_num=1;
+    while(fabs(position_goal[joint_num]-position_tmp[joint_num])/joint_speed_>0.1)
+    {
+        position_tmp[joint_num]+=joint_speed_*0.1*sign;
+
+        kinematic_state.setJointGroupPositions(joint_model_group, position_tmp);
+        if(plan_scene->isStateColliding(kinematic_state, group_->getName()))
+        {
+            if(loop_num==1)
+            {
+                resp.success=false;
+                std::string result="robot can't move in ";
+                result.append(direction);
+                result.append(" direction any more");
+                resp.message=result;
+                return true;
+            }
+            collision_flag=true;
+            break;
+        }
+
+        point_tmp.time_from_start=ros::Duration(0.1*loop_num);
+        std::vector<double> pos_tmp;
+        pos_tmp.resize(goal_.trajectory.joint_names.size());
+        for(size_t i=0; i<pos_tmp.size(); i++)
+        {
+            pos_tmp[i]=position_tmp[active_joints_[i]];
+        }
+        point_tmp.positions=pos_tmp;
+        goal_.trajectory.points.push_back(point_tmp);
+        loop_num++;
+    }
+
+    if(!collision_flag)
+    {
+        kinematic_state.setJointGroupPositions(joint_model_group, position_goal);
+        if(!plan_scene->isStateColliding(kinematic_state, group_->getName()))
+        {
+            std::vector<double> pos_tmp;
+            pos_tmp.resize(goal_.trajectory.joint_names.size());
+            for(size_t i=0; i<pos_tmp.size(); i++)
+            {
+                pos_tmp[i]=position_goal[active_joints_[i]];
+            }
+            point_tmp.positions=pos_tmp;
+            ros::Duration dur(duration_from_speed);
+            point_tmp.time_from_start=dur;
+            goal_.trajectory.points.push_back(point_tmp);
+        }
+    }
+
+    action_client_.sendGoal(goal_);
+    goal_.trajectory.points.clear();
+
+    resp.success=true;
+    std::string result="robot is moving in ";
+    result.append(direction);
+    result.append(" direction");
+    resp.message=result;
+    return true;
 }
 
 }

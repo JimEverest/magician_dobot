@@ -94,6 +94,8 @@ private:
     double cart_duration_default_;
     double resolution_angle_;
     double resolution_linear_;
+
+    double joint_speed_;
 };
 
 }
