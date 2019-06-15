@@ -62,7 +62,9 @@ TeleopBackground::TeleopBackground(moveit::planning_interface::MoveGroupInterfac
     resolution_angle_=0.02;
     resolution_linear_=0.005;
 
+    cart_duration_=cart_duration_default_/0.4;
     joint_speed_=joint_speed_default_*0.4;
+    joint_duration_=0.4;
 
     // active joints
     size_t active_joints[4]={0, 1, 3, 5};
@@ -105,7 +107,7 @@ bool TeleopBackground::jointTeleop_cb(magician_msgs::SetInt16::Request &req, mag
     }
 
     double duration_from_speed=fabs(position_goal[joint_num]-joint_current_position)/joint_speed_;
-    if(duration_from_speed<=0.1)
+    if(duration_from_speed<=joint_duration_)
     {
         resp.success=false;
         std::string result="robot can't move in ";
@@ -127,10 +129,31 @@ bool TeleopBackground::jointTeleop_cb(magician_msgs::SetInt16::Request &req, mag
     std::vector<double> position_tmp=position_current;
     bool collision_flag=false;
 
-    int loop_num=1;
-    while(fabs(position_goal[joint_num]-position_tmp[joint_num])/joint_speed_>0.1)
+    std::vector<double> static_velocities;
+    static_velocities.resize(goal_.trajectory.joint_names.size());
+    for(size_t i=0; i<static_velocities.size(); i++)
     {
-        position_tmp[joint_num]+=joint_speed_*0.1*sign;
+        static_velocities[i]=0;
+    }
+
+    std::vector<double> dynamic_velocities;
+    dynamic_velocities=static_velocities;
+    dynamic_velocities[active_joint_num]=joint_speed_*sign;
+
+    std::vector<double> accelerations;
+    accelerations=static_velocities;
+
+    int loop_num=1;
+    while(fabs(position_goal[joint_num]-position_tmp[joint_num])/joint_speed_>joint_duration_)
+    {
+        if(loop_num==1)
+        {
+            position_tmp[joint_num]+=0.5*joint_speed_*joint_duration_*sign;
+        }
+        else
+        {
+            position_tmp[joint_num]+=joint_speed_*joint_duration_*sign;
+        }
 
         kinematic_state.setJointGroupPositions(joint_model_group, position_tmp);
         if(plan_scene->isStateColliding(kinematic_state, group_->getName()))
@@ -148,7 +171,7 @@ bool TeleopBackground::jointTeleop_cb(magician_msgs::SetInt16::Request &req, mag
             break;
         }
 
-        point_tmp.time_from_start=ros::Duration(0.1*loop_num);
+        point_tmp.time_from_start=ros::Duration(joint_duration_*loop_num);
         std::vector<double> pos_tmp;
         pos_tmp.resize(goal_.trajectory.joint_names.size());
         for(size_t i=0; i<pos_tmp.size(); i++)
@@ -156,6 +179,8 @@ bool TeleopBackground::jointTeleop_cb(magician_msgs::SetInt16::Request &req, mag
             pos_tmp[i]=position_tmp[active_joints_[i]];
         }
         point_tmp.positions=pos_tmp;
+        point_tmp.velocities=dynamic_velocities;
+        point_tmp.accelerations=accelerations;
         goal_.trajectory.points.push_back(point_tmp);
         loop_num++;
     }
@@ -165,6 +190,7 @@ bool TeleopBackground::jointTeleop_cb(magician_msgs::SetInt16::Request &req, mag
         kinematic_state.setJointGroupPositions(joint_model_group, position_goal);
         if(!plan_scene->isStateColliding(kinematic_state, group_->getName()))
         {
+            size_t traj_length=goal_.trajectory.points.size();
             std::vector<double> pos_tmp;
             pos_tmp.resize(goal_.trajectory.joint_names.size());
             for(size_t i=0; i<pos_tmp.size(); i++)
@@ -172,10 +198,42 @@ bool TeleopBackground::jointTeleop_cb(magician_msgs::SetInt16::Request &req, mag
                 pos_tmp[i]=position_goal[active_joints_[i]];
             }
             point_tmp.positions=pos_tmp;
-            ros::Duration dur(duration_from_speed);
-            point_tmp.time_from_start=dur;
-            goal_.trajectory.points.push_back(point_tmp);
+            point_tmp.velocities=static_velocities;
+            point_tmp.accelerations=accelerations;
+            double last_time=goal_.trajectory.points[traj_length-1].time_from_start.toSec();
+            double extra_time=2*(pos_tmp[active_joint_num]-goal_.trajectory.points[traj_length-1].positions[active_joint_num])/(joint_speed_*sign);
+            if(extra_time>joint_duration_)
+            {
+                ros::Duration dur(last_time+extra_time);
+                point_tmp.time_from_start=dur;
+                goal_.trajectory.points.push_back(point_tmp);
+            }
+            else
+            {
+                pos_tmp=goal_.trajectory.points[traj_length-1].positions;
+                pos_tmp[active_joint_num]-=0.5*joint_speed_*joint_duration_*sign;
+                goal_.trajectory.points[traj_length-1].positions=pos_tmp;
+                goal_.trajectory.points[traj_length-1].velocities=static_velocities;
+            }
         }
+        else
+        {
+            size_t traj_length=goal_.trajectory.points.size();
+            std::vector<double> pos_tmp;
+            pos_tmp=goal_.trajectory.points[traj_length-1].positions;
+            pos_tmp[active_joint_num]-=0.5*joint_speed_*joint_duration_*sign;
+            goal_.trajectory.points[traj_length-1].positions=pos_tmp;
+            goal_.trajectory.points[traj_length-1].velocities=static_velocities;
+        }
+    }
+    else
+    {
+        size_t traj_length=goal_.trajectory.points.size();
+        std::vector<double> pos_tmp;
+        pos_tmp=goal_.trajectory.points[traj_length-1].positions;
+        pos_tmp[active_joint_num]-=0.5*joint_speed_*joint_duration_*sign;
+        goal_.trajectory.points[traj_length-1].positions=pos_tmp;
+        goal_.trajectory.points[traj_length-1].velocities=static_velocities;
     }
 
     action_client_.sendGoal(goal_);
@@ -193,7 +251,7 @@ bool TeleopBackground::jointTeleop_cb(magician_msgs::SetInt16::Request &req, mag
 
 int main(int argc, char** argv)
 {
-    ros::init(argc,argv,"magician_background", ros::init_options::AnonymousName);
+    ros::init(argc,argv,"magician_background");
 
     ros::CallbackQueue move_group_cb_queue;
 

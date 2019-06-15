@@ -92,10 +92,12 @@ private:
     double velocity_scaling_;
     double joint_speed_default_;
     double cart_duration_default_;
+
     double resolution_angle_;
     double resolution_linear_;
-
+    double cart_duration_;
     double joint_speed_;
+    double joint_duration_;
 };
 
 }
