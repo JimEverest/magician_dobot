@@ -72,6 +72,8 @@ public:
     bool homeTeleop_cb(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &resp);
     bool teleopStop_cb(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &resp);
 
+    void PoseStampedRotation(geometry_msgs::PoseStamped &pose_stamped, const tf::Vector3 &axis, double angle);
+
 private:
     moveit::planning_interface::MoveGroupInterface *group_;
     moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
@@ -98,6 +100,9 @@ private:
     double cart_duration_;
     double joint_speed_;
     double joint_duration_;
+
+    std::string default_tip_link_;
+    std::string root_link_;
 };
 
 }
