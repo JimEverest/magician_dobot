@@ -64,7 +64,7 @@ TeleopBackground::TeleopBackground(moveit::planning_interface::MoveGroupInterfac
 
     cart_duration_=cart_duration_default_/0.4;
     joint_speed_=joint_speed_default_*0.4;
-    joint_duration_=0.4;
+    joint_duration_=0.1;
 
     // active joints
     size_t active_joints[4]={0, 1, 3, 5};
@@ -213,30 +213,27 @@ bool TeleopBackground::jointTeleop_cb(magician_msgs::SetInt16::Request &req, mag
             }
             else
             {
-                pos_tmp=goal_.trajectory.points[traj_length-1].positions;
-                pos_tmp[active_joint_num]-=0.5*joint_speed_*joint_duration_*sign;
-                goal_.trajectory.points[traj_length-1].positions=pos_tmp;
-                goal_.trajectory.points[traj_length-1].velocities=static_velocities;
+                ros::Duration dur(last_time+joint_duration_+extra_time);
+                point_tmp.time_from_start=dur;
+                goal_.trajectory.points[traj_length-1]=point_tmp;
             }
         }
         else
         {
             size_t traj_length=goal_.trajectory.points.size();
-            std::vector<double> pos_tmp;
-            pos_tmp=goal_.trajectory.points[traj_length-1].positions;
-            pos_tmp[active_joint_num]-=0.5*joint_speed_*joint_duration_*sign;
-            goal_.trajectory.points[traj_length-1].positions=pos_tmp;
+            double last_time=goal_.trajectory.points[traj_length-1].time_from_start.toSec();
+            ros::Duration dur(last_time+joint_duration_);
             goal_.trajectory.points[traj_length-1].velocities=static_velocities;
+            goal_.trajectory.points[traj_length-1].time_from_start=dur;
         }
     }
     else
     {
         size_t traj_length=goal_.trajectory.points.size();
-        std::vector<double> pos_tmp;
-        pos_tmp=goal_.trajectory.points[traj_length-1].positions;
-        pos_tmp[active_joint_num]-=0.5*joint_speed_*joint_duration_*sign;
-        goal_.trajectory.points[traj_length-1].positions=pos_tmp;
+        double last_time=goal_.trajectory.points[traj_length-1].time_from_start.toSec();
+        ros::Duration dur(last_time+joint_duration_);
         goal_.trajectory.points[traj_length-1].velocities=static_velocities;
+        goal_.trajectory.points[traj_length-1].time_from_start=dur;
     }
 
     action_client_.sendGoal(goal_);

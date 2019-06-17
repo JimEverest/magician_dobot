@@ -11,10 +11,10 @@
   
   <xacro:property name="joint1_lower" value="-2.1816"/>
   <xacro:property name="joint1_upper" value="2.1816"/>
-  <xacro:property name="joint2_lower" value="-0.087"/>
-  <xacro:property name="joint2_upper" value="0.872"/>
-  <xacro:property name="joint3_lower" value="-0.087"/>
-  <xacro:property name="joint3_upper" value="1.134"/>
+  <xacro:property name="joint2_lower" value="0.35"/>
+  <xacro:property name="joint2_upper" value="1.57"/>
+  <xacro:property name="joint3_lower" value="0.62"/>
+  <xacro:property name="joint3_upper" value="1.57"/>
   
   <link name="world"/>
   <link name="magician_origin"/>
@@ -139,7 +139,7 @@
     <limit
       lower="${joint1_lower}"
       upper="${joint1_upper}"
-      effort="20"
+      effort="6"
       velocity="1.57" />
   </joint>
   <link
@@ -197,7 +197,7 @@
     <limit
       lower="${joint2_lower}"
       upper="${joint2_upper}"
-      effort="20"
+      effort="6"
       velocity="1.57" />
   </joint>
   <link
@@ -255,7 +255,7 @@
     <limit
       lower="${-1*joint2_upper}"
       upper="${-1*joint2_lower}"
-      effort="20"
+      effort="6"
       velocity="1.57" />
     <mimic
       joint="magician_joint2"
@@ -270,12 +270,12 @@
       <mass
         value="0.025" />
       <inertia
-        ixx="1E-5"
+        ixx="2.5E-4"
         ixy="0"
         ixz="0"
-        iyy="1E-5"
+        iyy="2.5E-4"
         iyz="0"
-        izz="1E-5" />
+        izz="2.5E-4" />
     </inertial>
   </link>
   <joint
@@ -293,7 +293,7 @@
     <limit
       lower="${joint3_lower}"
       upper="${joint3_upper}"
-      effort="20"
+      effort="6"
       velocity="1.57" />
   </joint>
   <link
@@ -351,7 +351,7 @@
     <limit
       lower="${-1*joint3_upper}"
       upper="${-1*joint3_lower}"
-      effort="20"
+      effort="6"
       velocity="1.57" />
     <mimic
       joint="magician_joint3"
@@ -598,7 +598,7 @@
     <limit
       lower="${-1*joint1_upper}"
       upper="${-1*joint1_lower}"
-      effort="20"
+      effort="6"
       velocity="1.57" />
     <mimic
       joint="magician_joint1"
