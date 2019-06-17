@@ -60,7 +60,7 @@ TeleopBackground::TeleopBackground(moveit::planning_interface::MoveGroupInterfac
     joint_speed_default_=0.78;
     cart_duration_default_=0.04;
     resolution_angle_=0.02;
-    resolution_linear_=0.001;
+    resolution_linear_=0.002;
 
     cart_duration_=cart_duration_default_/0.4;
     joint_speed_=joint_speed_default_*0.4;
@@ -272,8 +272,6 @@ bool TeleopBackground::cartTeleop_cb(magician_msgs::SetInt16::Request &req, magi
     tf::Vector3 x_axis(1, 0, 0);
     tf::Vector3 y_axis(0, 1, 0);
     tf::Vector3 z_axis(0, 0, 1);
-    double resolution_alpha=resolution_angle_;
-    double resolution_delta=resolution_linear_;
 
     robot_state::RobotStatePtr kinematic_state_ptr=group_->getCurrentState();
     robot_state::RobotState kinematic_state=*kinematic_state_ptr;
@@ -288,6 +286,35 @@ bool TeleopBackground::cartTeleop_cb(magician_msgs::SetInt16::Request &req, magi
     std::string direction;
 
     bool ik_have_result=true;
+    double resolution_alpha=resolution_angle_;
+    double resolution_delta=resolution_linear_;
+    double velocity_factor;
+
+    if(cart_duration_>0)
+    {
+        velocity_factor=1/cart_duration_;
+    }
+    else
+    {
+        resp.success=false;
+        std::string result="robot can't move";
+        resp.message=result;
+        return true;
+    }
+
+    std::vector<double> static_velocities;
+    static_velocities.resize(goal_.trajectory.joint_names.size());
+    for(size_t i=0; i<static_velocities.size(); i++)
+    {
+        static_velocities[i]=0;
+    }
+
+    std::vector<double> displacements;
+    displacements=static_velocities;
+
+    std::vector<double> accelerations;
+    accelerations=static_velocities;
+
     size_t loop_num=1;
     while(ik_have_result)
     {
@@ -346,12 +373,14 @@ bool TeleopBackground::cartTeleop_cb(magician_msgs::SetInt16::Request &req, magi
                 point_tmp.positions[j]=*kinematic_state.getJointPositions(goal_.trajectory.joint_names[j]);
                 if(loop_num==1)
                 {
-                    double shift_tmp=fabs(current_joint_states[active_joints_[j]]-point_tmp.positions[j]);
+                    displacements[j]=point_tmp.positions[j]-current_joint_states[active_joints_[j]];
+                    double shift_tmp=fabs(displacements[j]);
                     if(shift_tmp>biggest_shift)
                         biggest_shift=shift_tmp;
                 }
                 else {
-                    double shift_tmp=fabs(goal_.trajectory.points[loop_num-2].positions[j]-point_tmp.positions[j]);
+                    displacements[j]=point_tmp.positions[j]-goal_.trajectory.points[loop_num-2].positions[j];
+                    double shift_tmp=fabs(displacements[j]);
                     if(shift_tmp>biggest_shift)
                         biggest_shift=shift_tmp;
                 }
@@ -364,7 +393,13 @@ bool TeleopBackground::cartTeleop_cb(magician_msgs::SetInt16::Request &req, magi
             {
                 break;
             }
-            ros::Duration dur(loop_num*cart_duration_);
+            point_tmp.velocities.resize(displacements.size());
+            for(size_t i=0; i<displacements.size(); i++)
+            {
+                point_tmp.velocities[i]=displacements[i]*velocity_factor;
+            }
+            point_tmp.accelerations=accelerations;
+            ros::Duration dur((loop_num+1)*cart_duration_);
             point_tmp.time_from_start=dur;
             goal_.trajectory.points.push_back(point_tmp);
         }
@@ -385,6 +420,15 @@ bool TeleopBackground::cartTeleop_cb(magician_msgs::SetInt16::Request &req, magi
         resp.message=result;
         return true;
     }
+    else
+    {
+        size_t traj_length=goal_.trajectory.points.size();
+        double last_time=goal_.trajectory.points[traj_length-1].time_from_start.toSec();
+        ros::Duration dur(last_time+cart_duration_);
+        goal_.trajectory.points[traj_length-1].velocities=static_velocities;
+        goal_.trajectory.points[traj_length-1].time_from_start=dur;
+    }
+
     action_client_.sendGoal(goal_);
     goal_.trajectory.points.clear();
 
@@ -395,7 +439,6 @@ bool TeleopBackground::cartTeleop_cb(magician_msgs::SetInt16::Request &req, magi
     resp.message=result;
     return true;
 }
-
 
 void TeleopBackground::PoseStampedRotation(geometry_msgs::PoseStamped &pose_stamped, const tf::Vector3 &axis, double angle)
 {
