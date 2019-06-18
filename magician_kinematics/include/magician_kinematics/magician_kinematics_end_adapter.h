@@ -5,7 +5,7 @@ Created on Thurs June 13 10:54 2019
 
  Software License Agreement (BSD License)
 
- Copyright (c) 2018, Dobot Co., Ltd.
+ Copyright (c) 2019, Dobot Co., Ltd.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

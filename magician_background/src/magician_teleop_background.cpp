@@ -5,7 +5,7 @@ Created on Thurs June 14 10:20 2019
 
  Software License Agreement (BSD License)
 
- Copyright (c) 2018, Dobot Co., Ltd.
+ Copyright (c) 2019, Dobot Co., Ltd.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -60,7 +60,7 @@ TeleopBackground::TeleopBackground(moveit::planning_interface::MoveGroupInterfac
     joint_speed_default_=0.78;
     cart_duration_default_=0.04;
     resolution_angle_=0.02;
-    resolution_linear_=0.002;
+    resolution_linear_=0.005;
 
     cart_duration_=cart_duration_default_/0.4;
     joint_speed_=joint_speed_default_*0.4;
