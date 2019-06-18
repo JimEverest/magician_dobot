@@ -53,7 +53,7 @@ TeleopBackground::TeleopBackground(moveit::planning_interface::MoveGroupInterfac
     joint_teleop_server_=local_nh_.advertiseService("joint_teleop", &TeleopBackground::jointTeleop_cb, this);
     cart_teleop_server_=local_nh_.advertiseService("cart_teleop", &TeleopBackground::cartTeleop_cb, this);
 //    home_teleop_server_=local_nh_.advertiseService("home_teleop", &TeleopBackground::homeTeleop_cb, this);
-//    teleop_stop_server_=local_nh_.advertiseService("stop_teleop", &TeleopBackground::teleopStop_cb, this);
+    teleop_stop_server_=local_nh_.advertiseService("stop_teleop", &TeleopBackground::teleopStop_cb, this);
 
     // parameter for teleop
     joint_speed_limit_=1.57;
@@ -309,6 +309,9 @@ bool TeleopBackground::cartTeleop_cb(magician_msgs::SetInt16::Request &req, magi
         static_velocities[i]=0;
     }
 
+    std::vector<double> last_velocities;
+    last_velocities=static_velocities;
+
     std::vector<double> displacements;
     displacements=static_velocities;
 
@@ -373,12 +376,14 @@ bool TeleopBackground::cartTeleop_cb(magician_msgs::SetInt16::Request &req, magi
                 point_tmp.positions[j]=*kinematic_state.getJointPositions(goal_.trajectory.joint_names[j]);
                 if(loop_num==1)
                 {
+                    last_velocities=static_velocities;
                     displacements[j]=point_tmp.positions[j]-current_joint_states[active_joints_[j]];
                     double shift_tmp=fabs(displacements[j]);
                     if(shift_tmp>biggest_shift)
                         biggest_shift=shift_tmp;
                 }
                 else {
+                    last_velocities=goal_.trajectory.points[loop_num-2].velocities;
                     displacements[j]=point_tmp.positions[j]-goal_.trajectory.points[loop_num-2].positions[j];
                     double shift_tmp=fabs(displacements[j]);
                     if(shift_tmp>biggest_shift)
@@ -396,7 +401,14 @@ bool TeleopBackground::cartTeleop_cb(magician_msgs::SetInt16::Request &req, magi
             point_tmp.velocities.resize(displacements.size());
             for(size_t i=0; i<displacements.size(); i++)
             {
-                point_tmp.velocities[i]=displacements[i]*velocity_factor;
+                if(loop_num==1)
+                {
+                    point_tmp.velocities[i]=displacements[i]*velocity_factor;
+                }
+                else
+                {
+                    point_tmp.velocities[i]=2*displacements[i]*velocity_factor-last_velocities[i];
+                }
             }
             point_tmp.accelerations=accelerations;
             ros::Duration dur((loop_num+1)*cart_duration_);
@@ -437,6 +449,16 @@ bool TeleopBackground::cartTeleop_cb(magician_msgs::SetInt16::Request &req, magi
     result.append(direction);
     result.append(" direction");
     resp.message=result;
+    return true;
+}
+
+bool TeleopBackground::teleopStop_cb(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &resp)
+{
+    goal_.trajectory.points.clear();
+    action_client_.sendGoal(goal_);
+
+    resp.success=true;
+    resp.message="stop moving";
     return true;
 }
 
