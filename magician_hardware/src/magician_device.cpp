@@ -42,11 +42,20 @@ Created on Thurs June 19 16:42 2019
 
 namespace magician_hardware {
 
-MagicianDevice::MagicianDevice()
+MagicianDevice::MagicianDevice(unsigned long motor_num, std::vector<int> pulse_signs): motor_num_(motor_num)
 {
-    double default_joint_offsets[4]={0, 0, 0, 0};
-    joint_offsets_=std::vector<double>(default_joint_offsets, default_joint_offsets+4);
-    joint_bases_=std::vector<double>(default_joint_offsets, default_joint_offsets+4);
+    joint_bases_.resize(motor_num_);
+    joint_offsets_.resize(motor_num_);
+    pulse_angles_.resize(motor_num_);
+
+    for(size_t i=0; i<joint_bases_.size(); i++)
+    {
+        joint_bases_[i]=0;
+        joint_offsets_[i]=0;
+        pulse_angles_[i]=0;
+    }
+
+    pulse_signs_=pulse_signs;
 }
 
 MagicianDevice::~MagicianDevice()
@@ -56,6 +65,11 @@ MagicianDevice::~MagicianDevice()
 
 bool MagicianDevice::InitPose()
 {
+    if(joint_bases_.size()>4 || pulse_signs_.size()!=joint_bases_.size())
+    {
+        return false;
+    }
+
     Pose pose;
     int get_pose_times=0;
     int result=DobotCommunicate_InvalidParams;
@@ -89,7 +103,7 @@ bool MagicianDevice::ReadPose(std::vector<double> &joint_values)
             offset+=fabs(joint_bases_[i]-pose.jointAngle[i]*RAD_PER_DEGREE);
         }
 
-        if(offset>1*RAD_PER_DEGREE)
+        if(offset>0.1*RAD_PER_DEGREE)
         {
             pose_changed=true;
         }
@@ -100,9 +114,8 @@ bool MagicianDevice::ReadPose(std::vector<double> &joint_values)
         for(size_t i=0; i<joint_bases_.size(); i++)
         {
             joint_bases_[i]=pose.jointAngle[i]*RAD_PER_DEGREE;
+            joint_offsets_[i]=0;
         }
-        double default_joint_offsets[4]={0, 0, 0, 0};
-        joint_offsets_=std::vector<double>(default_joint_offsets, default_joint_offsets+4);
     }
 
     joint_values.resize(joint_bases_.size());
@@ -114,18 +127,23 @@ bool MagicianDevice::ReadPose(std::vector<double> &joint_values)
     return true;
 }
 
-bool MagicianDevice::WritePose(const std::vector<double> &joint_values)
+bool MagicianDevice::WritePose(const std::vector<double> &joint_cmds)
 {
-    assert(joint_values.size()==4);
+    assert(joint_cmds.size()==joint_offsets_.size());
 
-    std::vector<double> pulse_angles=joint_values;
+    std::vector<double> pulse_angles=joint_cmds;
     std::vector<double> pulses;
-    pulses.resize(pulse_angles.size());
+    pulses.resize(6);
 
     for (size_t i=0; i<pulse_angles.size(); i++)
     {
         pulse_angles[i]-=joint_offsets_[i]+joint_bases_[i];
-        pulses[i]=round(pulse_angles[i]*PULSE_PER_RAD);
+        pulses[i]=round(pulse_angles[i]*PULSE_PER_RAD*pulse_signs_[i]);
+    }
+
+    for(size_t i=pulse_angles.size(); i<pulses.size(); i++)
+    {
+        pulses[i]=0;
     }
 
     PluseCmd cmd;
@@ -133,8 +151,8 @@ bool MagicianDevice::WritePose(const std::vector<double> &joint_values)
     cmd.j2=pulses[1];
     cmd.j3=pulses[2];
     cmd.j4=pulses[3];
-    cmd.e1=0;
-    cmd.e2=0;
+    cmd.e1=pulses[4];
+    cmd.e2=pulses[5];
 
     uint64_t index;
 
@@ -150,7 +168,8 @@ bool MagicianDevice::WritePose(const std::vector<double> &joint_values)
     {
         for (size_t i=0; i<joint_offsets_.size(); i++)
         {
-            joint_offsets_[i]+=pulses[0]*RAD_PER_PULSE;
+            pulse_angles_[i]=pulses[i]*RAD_PER_PULSE*pulse_signs_[i];
+            joint_offsets_[i]+=pulse_angles_[i];
         }
         return true;
     }
@@ -160,10 +179,10 @@ bool MagicianDevice::WritePose(const std::vector<double> &joint_values)
     }
 }
 
-}
-
-
-int main(int argc, char** argv)
+void MagicianDevice::GetPulseAngle(std::vector<double> &pulse_angles)
 {
-    return 0;
+    pulse_angles=pulse_angles_;
 }
+
+}
+

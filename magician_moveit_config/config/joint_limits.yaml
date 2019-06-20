@@ -4,26 +4,26 @@
 joint_limits:
   magician_fake_joint1:
     has_velocity_limits: true
-    max_velocity: 1.57
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 3.14
+    has_acceleration_limits: true
+    max_acceleration: 9.42
   magician_fake_joint2:
     has_velocity_limits: true
-    max_velocity: 1.57
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 3.14
+    has_acceleration_limits: true
+    max_acceleration: 9.42
   magician_joint1:
     has_velocity_limits: true
-    max_velocity: 1.57
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 3.14
+    has_acceleration_limits: true
+    max_acceleration: 9.42
   magician_joint2:
     has_velocity_limits: true
-    max_velocity: 1.57
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 3.14
+    has_acceleration_limits: true
+    max_acceleration: 9.42
   magician_joint3:
     has_velocity_limits: true
-    max_velocity: 1.57
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 3.14
+    has_acceleration_limits: true
+    max_acceleration: 9.42

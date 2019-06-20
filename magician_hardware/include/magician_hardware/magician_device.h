@@ -51,17 +51,22 @@ const double RAD_PER_DEGREE=M_PI/180;
 
 class MagicianDevice {
 public:
-    MagicianDevice();
+    MagicianDevice(unsigned long motor_num, std::vector<int> pulse_signs);
     ~MagicianDevice();
 
     bool InitPose();
     bool ReadPose(std::vector<double> &joint_values);
-    bool WritePose(const std::vector<double> &joint_values);
+    bool WritePose(const std::vector<double> &joint_cmds);
+    void GetPulseAngle(std::vector<double> &pulse_angles);
 
 private:
+    unsigned long motor_num_;
+    std::vector<int> pulse_signs_;
+
     std::vector<double> joint_bases_;
     std::vector<double> joint_offsets_;
 
+    std::vector<double> pulse_angles_;
 };
 
 }

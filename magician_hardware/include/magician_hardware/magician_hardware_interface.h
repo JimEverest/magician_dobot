@@ -1,5 +1,5 @@
 /*
-Created on Thurs June 14 18:18 2019
+Created on Thurs June 19 18:18 2019
 
 @author: Cong Liu
 
@@ -37,8 +37,8 @@ Created on Thurs June 14 18:18 2019
 */
 // author: Cong Liu
 
-#ifndef MAGICIAN_HARDWARE_NODE_H
-#define MAGICIAN_HARDWARE_NODE_H
+#ifndef MAGICIAN_HARDWARE_INTERFACE_H
+#define MAGICIAN_HARDWARE_INTERFACE_H
 
 #include <ros/ros.h>
 #include <pthread.h>
@@ -63,13 +63,36 @@ Created on Thurs June 14 18:18 2019
 namespace magician_hardware {
 
 typedef struct{
+    std::string name;
+
     double position;
+    double velocity;
+    double effort;
+
     double position_cmd;
 }SimpleMotor;
 
 class MagicianHWInterface : public hardware_interface::RobotHW
 {
+public:
+    MagicianHWInterface();
+    ~MagicianHWInterface();
 
+    bool init(ros::NodeHandle& root_nh, ros::NodeHandle &robot_hw_nh);
+    void read(const ros::Time& time, const ros::Duration& period);
+    void write(const ros::Time& time, const ros::Duration& period);
+
+private:
+    boost::shared_ptr<MagicianDevice> magician_device_;
+    std::vector<SimpleMotor> simple_motors_;
+
+    hardware_interface::JointStateInterface jnt_state_interface_;
+    hardware_interface::PositionJointInterface jnt_position_cmd_interface_;
+
+    ros::NodeHandle root_nh_, local_nh_, robot_hw_nh_;
+
+    ros::Time read_update_time_;
+    ros::Duration read_update_dur_;
 };
 
 }
