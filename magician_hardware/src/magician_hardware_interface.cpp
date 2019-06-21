@@ -79,6 +79,8 @@ MagicianHWInterface::MagicianHWInterface(): local_nh_("~")
     }
     registerInterface(&jnt_position_cmd_interface_);
 
+    move_threshold_=M_PI/180;
+
 }
 
 MagicianHWInterface::~MagicianHWInterface()
@@ -147,6 +149,36 @@ void MagicianHWInterface::write(const ros::Time &time, const ros::Duration &peri
     }
 
     magician_device_->WritePose(jnt_cmds);
+}
+
+bool MagicianHWInterface::reinitPose(const std::vector<double> &joint_values)
+{
+    if(joint_values.size()!=simple_motors_.size())
+    {
+        return false;
+    }
+
+    for(size_t i=0; i<simple_motors_.size(); i++)
+    {
+        simple_motors_[i].position=joint_values[i];
+        simple_motors_[i].velocity=0;
+        simple_motors_[i].effort=0;
+        simple_motors_[i].position_cmd=joint_values[i];
+    }
+
+    return true;
+}
+
+bool MagicianHWInterface::isMoving()
+{
+    for(size_t i=0; i<simple_motors_.size(); i++)
+    {
+        if(fabs(simple_motors_[i].velocity)>move_threshold_)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 }

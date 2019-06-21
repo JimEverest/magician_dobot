@@ -42,7 +42,7 @@ Created on Thurs June 19 16:42 2019
 
 namespace magician_hardware {
 
-MagicianDevice::MagicianDevice(unsigned long motor_num, std::vector<int> pulse_signs): motor_num_(motor_num)
+MagicianDevice::MagicianDevice(unsigned long motor_num, std::vector<int> pulse_signs): local_nh_("~"), motor_num_(motor_num)
 {
     joint_bases_.resize(motor_num_);
     joint_offsets_.resize(motor_num_);
@@ -65,14 +65,18 @@ MagicianDevice::~MagicianDevice()
 
 bool MagicianDevice::InitPose()
 {
-    if(joint_bases_.size()>4 || pulse_signs_.size()!=joint_bases_.size())
+    if(motor_num_>4 || pulse_signs_.size()!=motor_num_)
     {
         return false;
     }
 
+    SetHHTTrigMode(TriggeredOnKeyReleased);
+    SetHHTTrigOutputEnabled(true);
+
     Pose pose;
     int get_pose_times=0;
     int result=DobotCommunicate_InvalidParams;
+
     while (result!=DobotCommunicate_NoError) {
         result=GetPose(&pose);
         get_pose_times++;
@@ -85,13 +89,65 @@ bool MagicianDevice::InitPose()
     for(size_t i=0; i<joint_bases_.size(); i++)
     {
         joint_bases_[i]=pose.jointAngle[i]*RAD_PER_DEGREE;
+        joint_offsets_[i]=0;
     }
 
     return true;
 }
 
+bool MagicianDevice::ResetPose(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &resp, std::vector<double> &joint_values)
+{
+    if(!req.data)
+    {
+        resp.message="Request's data is false";
+        resp.success=false;
+        return true;
+    }
+
+    Pose pose;
+    int result=GetPose(&pose);
+    if(result!=DobotCommunicate_NoError)
+    {
+        resp.message="Getting current pose failed";
+        resp.success=false;
+        return true;
+    }
+
+    bool pose_changed=false;
+    double offset=0;
+    for(size_t i=0; i<joint_bases_.size(); i++)
+    {
+        offset+=fabs(joint_bases_[i]-pose.jointAngle[i]*RAD_PER_DEGREE);
+    }
+
+    if(offset>0.1*RAD_PER_DEGREE)
+    {
+        pose_changed=true;
+    }
+
+    if(!pose_changed)
+    {
+        resp.message="Pose doesn't change";
+        resp.success=false;
+        return true;
+    }
+
+    for(size_t i=0; i<joint_bases_.size(); i++)
+    {
+        joint_bases_[i]=pose.jointAngle[i]*RAD_PER_DEGREE;
+        joint_offsets_[i]=0;
+    }
+
+    joint_values=joint_bases_;
+
+    resp.message="Resetting pose succeed";
+    resp.success=true;
+    return true;
+}
+
 bool MagicianDevice::ReadPose(std::vector<double> &joint_values)
 {
+    /*
     Pose pose;
     int result=GetPose(&pose);
     bool pose_changed=false;
@@ -117,8 +173,12 @@ bool MagicianDevice::ReadPose(std::vector<double> &joint_values)
             joint_offsets_[i]=0;
         }
     }
+    */
 
-    joint_values.resize(joint_bases_.size());
+//    bool isTriggered;
+//    GetHHTTrigOutput(&isTriggered);
+
+    joint_values.resize(motor_num_);
     for(size_t i=0; i<joint_bases_.size(); i++)
     {
         joint_values[i]=joint_bases_[i]+joint_offsets_[i];
@@ -129,7 +189,7 @@ bool MagicianDevice::ReadPose(std::vector<double> &joint_values)
 
 bool MagicianDevice::WritePose(const std::vector<double> &joint_cmds)
 {
-    assert(joint_cmds.size()==joint_offsets_.size());
+    assert(joint_cmds.size()==motor_num_);
 
     std::vector<double> pulse_angles=joint_cmds;
     std::vector<double> pulses;
@@ -159,8 +219,8 @@ bool MagicianDevice::WritePose(const std::vector<double> &joint_cmds)
     int send_pulse_times=0;
     int result=DobotCommunicate_InvalidParams;
 
-    while(result!= DobotCommunicate_NoError && send_pulse_times<2) {
-        result=SendPluse(&cmd, true, &index);
+    while(result!= DobotCommunicate_NoError && send_pulse_times<1) {
+        result=SendPluse(&cmd, false, &index);
         send_pulse_times++;
     }
 

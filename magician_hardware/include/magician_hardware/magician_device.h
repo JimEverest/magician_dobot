@@ -41,6 +41,7 @@ Created on Thurs June 19 16:31 2019
 #define MAGICIAN_DEVICE_H
 
 #include <ros/ros.h>
+#include <std_srvs/SetBool.h>
 #include <DobotDll.h>
 
 namespace magician_hardware {
@@ -55,11 +56,14 @@ public:
     ~MagicianDevice();
 
     bool InitPose();
+    bool ResetPose(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &resp, std::vector<double> &joint_values);
     bool ReadPose(std::vector<double> &joint_values);
     bool WritePose(const std::vector<double> &joint_cmds);
     void GetPulseAngle(std::vector<double> &pulse_angles);
 
 private:
+    ros::NodeHandle local_nh_;
+
     unsigned long motor_num_;
     std::vector<int> pulse_signs_;
 

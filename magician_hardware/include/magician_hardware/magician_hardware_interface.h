@@ -82,6 +82,10 @@ public:
     void read(const ros::Time& time, const ros::Duration& period);
     void write(const ros::Time& time, const ros::Duration& period);
 
+    bool reinitPose(const std::vector<double> &joint_values);
+    bool isMoving();
+    bool ResetPose(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &resp);
+
 private:
     boost::shared_ptr<MagicianDevice> magician_device_;
     std::vector<SimpleMotor> simple_motors_;
@@ -93,6 +97,8 @@ private:
 
     ros::Time read_update_time_;
     ros::Duration read_update_dur_;
+
+    double move_threshold_;
 };
 
 }
