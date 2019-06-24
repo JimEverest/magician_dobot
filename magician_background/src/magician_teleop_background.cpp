@@ -484,7 +484,7 @@ void TeleopBackground::PoseStampedRotation(geometry_msgs::PoseStamped &pose_stam
 
 int main(int argc, char** argv)
 {
-    ros::init(argc,argv,"magician_background");
+    ros::init(argc,argv,"magician_background", ros::init_options::AnonymousName);
 
     ros::CallbackQueue move_group_cb_queue;
 
