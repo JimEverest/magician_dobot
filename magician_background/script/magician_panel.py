@@ -59,7 +59,7 @@ class MyFrame(wx.Frame):
         wx.Frame.__init__(self,parent,id,'Magician Control Panel',pos=(250,100)) 
         self.panel=wx.Panel(self)
         font=self.panel.GetFont()
-        font.SetPixelSize((10, 20))
+        font.SetPixelSize((12, 24))
         self.panel.SetFont(font)
         
         self.listener = tf.TransformListener()

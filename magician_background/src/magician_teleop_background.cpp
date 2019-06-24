@@ -357,12 +357,7 @@ bool TeleopBackground::cartTeleop_cb(magician_msgs::SetInt16::Request &req, magi
         tf::poseTFToEigen(tf_pose_tmp, affine_pose_tmp);
         affine_current_pose=affine_pose_tmp;
 
-        Eigen::Isometry3d iso_current_pose;
-        iso_current_pose.translation()=affine_current_pose.translation();
-        iso_current_pose.linear()=affine_current_pose.rotation();
-
-        ik_have_result=kinematic_state.setFromIK(joint_model_group, iso_current_pose, default_tip_link_);
-        affine_current_pose=iso_current_pose.matrix();
+        ik_have_result=kinematic_state.setFromIK(joint_model_group, affine_current_pose, default_tip_link_);
 
         if(ik_have_result)
         {
